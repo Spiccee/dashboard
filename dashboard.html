@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AHYAN TRADERS Dashboard & Billing</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <!-- XLSX library for Excel export/import -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.16.2/xlsx.full.min.js"></script>
+  <!-- html2canvas for image export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <style>
+    /* General styles */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Roboto', sans-serif;
+      background: #f4f6f9;
+      min-height: 100vh;
+    }
+    header {
+      background-color: #1e1e2f;
+      color: #fff;
+      padding: 20px;
+      text-align: center;
+      font-size: 1.8rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    /* Login styles */
+    .login-container {
+      width: 300px;
+      margin: 150px auto;
+      padding: 20px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    .login-container h2 {
+      color: #007bff;
+      margin-bottom: 20px;
+    }
+    .login-container input[type="text"],
+    .login-container input[type="password"] {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 1em;
+    }
+    .login-container button {
+      width: 100%;
+      padding: 10px;
+      background: #007bff;
+      border: none;
+      border-radius: 5px;
+      color: white;
+      font-size: 1em;
+      cursor: pointer;
+    }
+    .login-container button:hover { background: #0056b3; }
+    .error { color: red; margin-bottom: 10px; font-size: 0.9em; }
+    /* Dashboard Section */
+    #dashboardSection { display: none; }
+    .dashboard {
+      display: flex;
+      flex-direction: row;
+      height: calc(100vh - 60px); /* header height adjustment */
+    }
+    .sidebar {
+      width: 250px;
+      background: #2d2d44;
+      padding: 20px;
+      color: #fff;
+    }
+    .sidebar button {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 15px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 5px;
+      background-color: #4c4c7d;
+      color: #fff;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    .sidebar button:hover { background-color: #6161a8; }
+    .content {
+      flex: 1;
+      padding: 40px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #000;
+      overflow: hidden;
+    }
+    #bgImage {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      z-index: -1;
+    }
+    .welcome-text {
+      font-size: 1.2rem;
+      color: #fff;
+      background: rgba(0,0,0,0.6);
+      padding: 15px 20px;
+      border-radius: 5px;
+      z-index: 1;
+    }
+    /* Main Menu Modal */
+    .modal {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+    }
+    .modal-content {
+      background: #fff;
+      padding: 30px;
+      border-radius: 10px;
+      width: 300px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+      text-align: center;
+    }
+    .modal-content h2 { margin-bottom: 20px; color: #333; }
+    .menu-item { margin: 10px 0; }
+    .menu-item button {
+      width: 100%;
+      padding: 10px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 5px;
+      background-color: #1e1e2f;
+      color: #fff;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    .menu-item button:hover { background-color: #333; }
+    .close-container { margin-top: 20px; }
+    .close-container button {
+      padding: 10px 20px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 5px;
+      background-color: #b83232;
+      color: #fff;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    .close-container button:hover { background-color: #a02828; }
+    /* Billing System Section (from your provided code) */
+    #billingSystem { display: none; }
+    .billing-system { display: block; }
+    .billing-system .container {
+      max-width: 1000px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      border-radius: 10px;
+      text-align: center;
+    }
+    .billing-system h1 {
+      background: #007bff;
+      color: white;
+      padding: 10px;
+      border-radius: 10px;
+    }
+    .billing-system .dsr-info,
+    .billing-system .customer-info {
+      text-align: left;
+      margin: 10px 0;
+    }
+    .billing-system .dsr-info div,
+    .billing-system .customer-info div { margin-bottom: 5px; }
+    .billing-system .customer-info label {
+      font-weight: bold;
+      margin-right: 5px;
+    }
+    .billing-system .customer-info input {
+      padding: 5px;
+      border: 1px solid #ddd;
+      border-radius: 3px;
+    }
+    .billing-system .item-entry { margin-top: 20px; }
+    .billing-system .item-entry label { margin-right: 5px; }
+    .billing-system #item { padding: 5px; width: 250px; }
+    .billing-system table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    .billing-system th, .billing-system td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: center;
+    }
+    .billing-system th { background-color: #007bff; color: white; }
+    .billing-system thead tr:first-child th[colspan] { border-bottom: 2px solid #000; }
+    .billing-system .total-container {
+      text-align: right;
+      margin-top: 10px;
+      font-size: 20px;
+      font-weight: bold;
+    }
+    .billing-system button {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      cursor: pointer;
+      border-radius: 5px;
+      margin: 5px;
+    }
+    .billing-system button:hover { background: #0056b3; }
+    /* Billing System Modal styles */
+    .billing-system .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      padding: 20px;
+      border: 1px solid #888;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.25);
+      width: 300px;
+      text-align: left;
+    }
+    .billing-system #editItemModal { z-index: 1100; }
+    .billing-system .modal h3 { margin-top: 0; }
+    .billing-system .modal input { width: 100%; padding: 5px; margin: 5px 0 10px 0; }
+    .billing-system .modal button { margin-top: 10px; }
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .dashboard { flex-direction: column; }
+      .sidebar { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Login Screen -->
+  <div class="login-container" id="loginContainer">
+    <h2>Login</h2>
+    <div class="error" id="errorMsg"></div>
+    <input type="text" id="username" placeholder="Username" />
+    <input type="password" id="password" placeholder="Password" />
+    <button onclick="login()">Login</button>
+  </div>
+  
+  <!-- Dashboard Section -->
+  <div id="dashboardSection">
+    <header>AHYAN TRADERS Dashboard</header>
+    <div class="dashboard">
+      <div class="sidebar">
+        <button id="mainMenuBtn">Main Menu</button>
+      </div>
+      <div class="content">
+        <img id="bgImage" src="" alt="Background">
+        <p class="welcome-text">Welcome to AHYAN TRADERS Business Management Dashboard.</p>
+      </div>
+    </div>
+    <!-- Main Menu Modal -->
+    <div id="menuModal" class="modal">
+      <div class="modal-content">
+        <h2>Main Menu</h2>
+        <div class="menu-item">
+          <button id="saleSummary">Sale Summary</button>
+        </div>
+        <div class="menu-item">
+          <button id="stockReport">Stock Report</button>
+        </div>
+        <div class="menu-item">
+          <button id="billingButton">Billing</button>
+        </div>
+        <div class="close-container">
+          <button id="closeModal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Billing System Section (from your provided code) -->
+  <div class="billing-system" id="billingSystem">
+    <div class="container">
+      <h1>AHYAN TRADERS</h1>
+      <div class="dsr-info">
+        <div>
+          <strong>DSR Name:</strong> <input type="text" id="dsrName" value="Your DSR Name" style="border:none; border-bottom:1px solid #000;" />
+        </div>
+        <div>
+          <strong>Date:</strong> <span id="currentDate"></span>
+        </div>
+      </div>
+      <div class="customer-info">
+        <div>
+          <label for="customerNameBill">Customer:</label>
+          <input type="text" id="customerNameBill" value="John Doe" />
+        </div>
+        <div>
+          <label for="route">Route:</label>
+          <input type="text" id="route" value="Default Route" />
+        </div>
+      </div>
+      <div class="item-entry no-print">
+        <label for="item">Product Code:</label>
+        <input type="text" id="item" list="productList" placeholder="Search product code..." />
+        <datalist id="productList"></datalist>
+        <button onclick="addItem()">Add to Bill</button>
+      </div>
+      <table id="billTable">
+        <thead>
+          <tr>
+            <th rowspan="2">Product Code</th>
+            <th rowspan="2">Description</th>
+            <th rowspan="2">CTN Size</th>
+            <th rowspan="2">Trasae Price</th>
+            <th colspan="3">Sale Qty</th>
+            <th rowspan="2">Gross Amount</th>
+            <th rowspan="2" class="no-print">Trade Offer (%)</th>
+            <th rowspan="2" class="no-print">Sales Tax (%)</th>
+            <th rowspan="2">Net Amount</th>
+            <th rowspan="2" class="no-print">Action</th>
+          </tr>
+          <tr>
+            <th class="no-print">Ctns</th>
+            <th class="no-print">Boxes</th>
+            <th class="no-print">Pcs</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Rows dynamically added -->
+        </tbody>
+      </table>
+      <div class="total-container">Grand Total: <span id="grandTotal">Rs 0.00</span></div>
+      <div class="item-entry no-print">
+        <button onclick="showNewItemModal()">Add New Item</button>
+      </div>
+      <div class="no-print">
+        <button onclick="generateExcel()">Generate Excel</button>
+        <button onclick="window.print()">Print</button>
+        <button onclick="showSavedItemsModal()">View Saved Items</button>
+        <button onclick="nextBill()">Next Bill</button>
+      </div>
+      <button id="backToDashboard">Back to Dashboard</button>
+    </div>
+  </div>
+  
+  <!-- Modals for Billing System -->
+  <div id="newItemModal" class="modal no-print">
+    <h3>Add New Item</h3>
+    <label for="newProductCode">Product Code:</label>
+    <input type="text" id="newProductCode" placeholder="e.g., P004" />
+    <label for="newDescription">Description:</label>
+    <input type="text" id="newDescription" placeholder="Product description" />
+    <label for="newCtnSize">CTN Size:</label>
+    <input type="text" id="newCtnSize" placeholder="e.g., Small/Medium/Large" />
+    <label for="newCtnPrice">Trasae Price:</label>
+    <input type="number" id="newCtnPrice" placeholder="Price per CTN" />
+    <label for="newBoxesPerCtn">Boxes per CTN:</label>
+    <input type="number" id="newBoxesPerCtn" placeholder="Number of boxes in one CTN" />
+    <button onclick="saveNewItem()">Save Item</button>
+    <button onclick="closeModal('newItemModal')">Close</button>
+  </div>
+  
+  <div id="editItemModal" class="modal no-print">
+    <h3>Edit Item</h3>
+    <input type="hidden" id="editProductCode" />
+    <label for="editDescription">Description:</label>
+    <input type="text" id="editDescription" />
+    <label for="editCtnSize">CTN Size:</label>
+    <input type="text" id="editCtnSize" />
+    <label for="editCtnPrice">Trasae Price:</label>
+    <input type="number" id="editCtnPrice" />
+    <label for="editBoxesPerCtn">Boxes per CTN:</label>
+    <input type="number" id="editBoxesPerCtn" />
+    <button onclick="saveEditedItem()">Save Changes</button>
+    <button onclick="closeModal('editItemModal')">Close</button>
+  </div>
+  
+  <div id="savedItemsModal" class="modal no-print">
+    <h3>Saved Items</h3>
+    <div class="search-container">
+      <label for="savedSearch">Search from Description:</label>
+      <input type="text" id="savedSearch" placeholder="Type to search..." oninput="filterSavedItems()" />
+    </div>
+    <div id="savedItemsList"></div>
+    <button onclick="document.getElementById('excelInput').click()">Load from Excel</button>
+    <input type="file" id="excelInput" accept=".xlsx, .xls" style="display:none" onchange="loadItemsFromExcel(this)" />
+    <button onclick="deleteItem()">Delete Item</button>
+    <button onclick="closeModal('savedItemsModal')">Close</button>
+  </div>
+  
+  <script>
+    /* Login Functionality */
+    function login() {
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
+      const errorMsg = document.getElementById("errorMsg");
+      if (username === "admin" && password === "admin") {
+        document.getElementById("loginContainer").style.display = "none";
+        // Show dashboard first
+        document.getElementById("dashboardSection").style.display = "block";
+        loadItemsFromStorage();
+        populateItems();
+        document.getElementById("currentDate").textContent = new Date().toLocaleDateString();
+      } else {
+        errorMsg.textContent = "Invalid username or password!";
+      }
+    }
+    
+    /* Billing System Functions using localStorage */
+    let items = {
+      "P001": { description: "Item A", ctnSize: "Small", ctnPrice: 1000, boxesPerCtn: 10 },
+      "P002": { description: "Item B", ctnSize: "Medium", ctnPrice: 2000, boxesPerCtn: 20 },
+      "P003": { description: "Item C", ctnSize: "Large", ctnPrice: 3000, boxesPerCtn: 30 }
+    };
+    
+    function loadItemsFromStorage() {
+      const stored = localStorage.getItem("savedItems");
+      if (stored) {
+        try { items = JSON.parse(stored); } 
+        catch(e) { console.error("Error parsing savedItems:", e); }
+      }
+    }
+    
+    function saveItemsToStorage() {
+      localStorage.setItem("savedItems", JSON.stringify(items));
+    }
+    
+    function populateItems() {
+      let dataList = document.getElementById("productList");
+      dataList.innerHTML = "";
+      for (let code in items) {
+        let option = document.createElement("option");
+        option.value = code + " - " + items[code].description;
+        dataList.appendChild(option);
+      }
+    }
+    
+    function addItem() {
+      let inputVal = document.getElementById("item").value;
+      if (!inputVal) return;
+      let productCode = inputVal.split(" - ")[0];
+      if (!items[productCode]) { alert("Invalid product code."); return; }
+      let product = items[productCode];
+      let tableBody = document.getElementById("billTable").querySelector("tbody");
+      let row = tableBody.insertRow();
+      row.setAttribute("data-product", JSON.stringify(product));
+      let cellCode = row.insertCell(); cellCode.textContent = productCode;
+      let cellDesc = row.insertCell(); cellDesc.textContent = product.description;
+      let cellCtnSize = row.insertCell(); cellCtnSize.textContent = product.ctnSize;
+      let cellRate = row.insertCell(); cellRate.textContent = product.ctnPrice.toFixed(2);
+      let cellCtns = row.insertCell(); cellCtns.innerHTML = '<input type="number" class="ctns" value="1" style="width:50px;" />';
+      let cellBoxes = row.insertCell(); cellBoxes.innerHTML = '<input type="number" class="boxes" value="0" style="width:50px;" />';
+      let cellPcs = row.insertCell(); cellPcs.innerHTML = '<input type="number" class="pcs" value="0" style="width:50px;" />';
+      let cellGross = row.insertCell(); cellGross.className = "gross"; cellGross.textContent = "0.00";
+      let cellTrade = row.insertCell(); cellTrade.className = "no-print"; cellTrade.innerHTML = '<input type="number" class="tradeOffer" value="0" style="width:70px;" />';
+      let cellTax = row.insertCell(); cellTax.className = "no-print"; cellTax.innerHTML = '<input type="number" class="salesTax" value="0" style="width:70px;" />';
+      let cellNet = row.insertCell(); cellNet.className = "net"; cellNet.textContent = "0.00";
+      let cellAction = row.insertCell(); cellAction.className = "no-print"; cellAction.innerHTML = '<button onclick="removeRow(this)">Remove</button>';
+      let inputs = row.querySelectorAll("input");
+      inputs.forEach(input => input.addEventListener("input", () => updateRow(row)));
+      updateRow(row);
+    }
+    
+    function updateRow(row) {
+      let product = JSON.parse(row.getAttribute("data-product"));
+      let ctns = parseFloat(row.querySelector(".ctns").value) || 0;
+      let boxes = parseFloat(row.querySelector(".boxes").value) || 0;
+      let pcs = parseFloat(row.querySelector(".pcs").value) || 0;
+      let tradeOfferPercent = parseFloat(row.querySelector(".tradeOffer").value) || 0;
+      let salesTaxPercent = parseFloat(row.querySelector(".salesTax").value) || 0;
+      let gross = (ctns * product.ctnPrice) + (boxes * (product.ctnPrice / product.boxesPerCtn)) + (pcs * (product.ctnPrice / (product.boxesPerCtn * 10)));
+      row.querySelector(".gross").textContent = gross.toFixed(2);
+      let discount = (tradeOfferPercent / 100) * gross;
+      let salesTaxValue = (salesTaxPercent / 100) * gross;
+      let net = gross - discount + salesTaxValue;
+      row.querySelector(".net").textContent = net.toFixed(2);
+      recalcGrandTotal();
+    }
+    
+    function recalcGrandTotal() {
+      let rows = document.getElementById("billTable").querySelector("tbody").rows;
+      let grandTotal = 0;
+      for (let row of rows) {
+        let net = parseFloat(row.querySelector(".net").textContent) || 0;
+        grandTotal += net;
+      }
+      document.getElementById("grandTotal").textContent = "Rs " + grandTotal.toFixed(2);
+    }
+    
+    function removeRow(btn) {
+      let row = btn.parentNode.parentNode;
+      row.parentNode.removeChild(row);
+      recalcGrandTotal();
+    }
+    
+    function showNewItemModal() {
+      document.getElementById("newItemModal").style.display = "block";
+    }
+    function closeModal(id) {
+      document.getElementById(id).style.display = "none";
+    }
+    function saveNewItem() {
+      let code = document.getElementById("newProductCode").value.trim();
+      let desc = document.getElementById("newDescription").value.trim();
+      let size = document.getElementById("newCtnSize").value.trim();
+      let price = parseFloat(document.getElementById("newCtnPrice").value);
+      let boxes = parseFloat(document.getElementById("newBoxesPerCtn").value);
+      if(code && desc && size && price && boxes) {
+        items[code] = { description: desc, ctnSize: size, ctnPrice: price, boxesPerCtn: boxes };
+        populateItems();
+        alert("New item added successfully!");
+        saveItemsToStorage();
+        document.getElementById("newProductCode").value = "";
+        document.getElementById("newDescription").value = "";
+        document.getElementById("newCtnSize").value = "";
+        document.getElementById("newCtnPrice").value = "";
+        document.getElementById("newBoxesPerCtn").value = "";
+        closeModal("newItemModal");
+      } else {
+        alert("Please fill in all fields correctly.");
+      }
+    }
+    
+    function openEditModal(code) {
+      closeModal('savedItemsModal');
+      let item = items[code];
+      if (!item) return;
+      document.getElementById("editProductCode").value = code;
+      document.getElementById("editDescription").value = item.description;
+      document.getElementById("editCtnSize").value = item.ctnSize;
+      document.getElementById("editCtnPrice").value = item.ctnPrice;
+      document.getElementById("editBoxesPerCtn").value = item.boxesPerCtn;
+      document.getElementById("editItemModal").style.display = "block";
+    }
+    function saveEditedItem() {
+      let code = document.getElementById("editProductCode").value;
+      items[code] = {
+        description: document.getElementById("editDescription").value,
+        ctnSize: document.getElementById("editCtnSize").value,
+        ctnPrice: parseFloat(document.getElementById("editCtnPrice").value),
+        boxesPerCtn: parseFloat(document.getElementById("editBoxesPerCtn").value)
+      };
+      saveItemsToStorage();
+      populateItems();
+      closeModal("editItemModal");
+      showSavedItemsModal();
+    }
+    
+    function showSavedItemsModal() {
+      let listDiv = document.getElementById("savedItemsList");
+      listDiv.innerHTML = "";
+      for (let code in items) {
+        let item = items[code];
+        let para = document.createElement("p");
+        para.style.cursor = "pointer";
+        para.textContent = code + " - " + item.description + ", CTN Size: " + item.ctnSize + ", Price: " + item.ctnPrice + ", Boxes/CTN: " + item.boxesPerCtn;
+        para.onclick = () => openEditModal(code);
+        listDiv.appendChild(para);
+      }
+      document.getElementById("savedItemsModal").style.display = "block";
+    }
+    function filterSavedItems() {
+      let searchVal = document.getElementById("savedSearch").value.toLowerCase();
+      let listDiv = document.getElementById("savedItemsList");
+      listDiv.innerHTML = "";
+      for (let code in items) {
+        let item = items[code];
+        if (code.toLowerCase().includes(searchVal) || item.description.toLowerCase().includes(searchVal)) {
+          let para = document.createElement("p");
+          para.style.cursor = "pointer";
+          para.textContent = code + " - " + item.description + ", CTN Size: " + item.ctnSize + ", Price: " + item.ctnPrice + ", Boxes/CTN: " + item.boxesPerCtn;
+          para.onclick = () => openEditModal(code);
+          listDiv.appendChild(para);
+        }
+      }
+    }
+    
+    function deleteItem() {
+      let code = prompt("Enter the product code to delete:");
+      if (!code || !items[code]) { alert("Product code not found!"); return; }
+      let pass = prompt("Enter deletion password:");
+      if (pass === "delete123") {
+        delete items[code];
+        alert("Item " + code + " deleted successfully!");
+        saveItemsToStorage();
+        populateItems();
+        showSavedItemsModal();
+      } else {
+        alert("Incorrect password!");
+      }
+    }
+    
+    function loadItemsFromExcel(inputElem) {
+      let file = inputElem.files[0];
+      if (!file) return;
+      let reader = new FileReader();
+      reader.onload = function(e) {
+        let data = e.target.result;
+        let workbook = XLSX.read(data, { type: 'binary' });
+        let firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+        let excelItems = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+        for (let i = 1; i < excelItems.length; i++) {
+          let row = excelItems[i];
+          if (row && row[0]) {
+            let code = row[0].toString();
+            items[code] = {
+              description: row[1] ? row[1].toString() : "",
+              ctnSize: row[2] ? row[2].toString() : "",
+              ctnPrice: row[3] ? parseFloat(row[3]) : 0,
+              boxesPerCtn: row[4] ? parseFloat(row[4]) : 0
+            };
+          }
+        }
+        saveItemsToStorage();
+        populateItems();
+        alert("Items loaded from Excel successfully!");
+      };
+      reader.readAsBinaryString(file);
+    }
+    
+    function generateExcel() {
+      let origTable = document.getElementById("billTable");
+      let clone = origTable.cloneNode(true);
+      let headerRows = clone.tHead.rows;
+      for (let i = 0; i < headerRows.length; i++) {
+        headerRows[i].deleteCell(-1);
+      }
+      let bodyRows = clone.tBodies[0].rows;
+      for (let i = 0; i < bodyRows.length; i++) {
+        bodyRows[i].deleteCell(-1);
+      }
+      let inputs = clone.querySelectorAll("input");
+      inputs.forEach(input => { input.parentNode.textContent = input.value; });
+      let wb = XLSX.utils.book_new();
+      let ws = XLSX.utils.table_to_sheet(clone);
+      XLSX.utils.book_append_sheet(wb, ws, "Bill");
+      XLSX.writeFile(wb, "bill.xlsx");
+    }
+    
+    function nextBill() {
+      let container = document.querySelector('.container');
+      let clone = container.cloneNode(true);
+      let npElements = clone.querySelectorAll('.no-print');
+      npElements.forEach(el => el.parentNode.removeChild(el));
+      clone.style.position = 'absolute';
+      clone.style.top = '-9999px';
+      document.body.appendChild(clone);
+      html2canvas(clone).then(function(canvas) {
+        let link = document.createElement('a');
+        link.download = 'bill.png';
+        link.href = canvas.toDataURL();
+        link.click();
+        document.body.removeChild(clone);
+        document.getElementById("billTable").querySelector("tbody").innerHTML = "";
+        document.getElementById("grandTotal").textContent = "Rs 0.00";
+      });
+    }
+    
+    /* Dashboard Background Slideshow */
+    const images = [
+      'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?ixlib=rb-1.2.1&auto=format&fit=crop&w=1600&q=80',
+      'https://images.unsplash.com/photo-1581091012184-6ca2a1ee7b5b?ixlib=rb-1.2.1&auto=format&fit=crop&w=1600&q=80',
+      'https://images.unsplash.com/photo-1519389950473-47ba0277781c?ixlib=rb-1.2.1&auto=format&fit=crop&w=1600&q=80',
+      'https://images.unsplash.com/photo-1573497491208-6b1acb260507?ixlib=rb-1.2.1&auto=format&fit=crop&w=1600&q=80',
+      'https://images.unsplash.com/photo-1497493292307-31c376b6e479?ixlib=rb-1.2.1&auto=format&fit=crop&w=1600&q=80'
+    ];
+    let currentImageIndex = 0;
+    const bgImage = document.getElementById('bgImage');
+    // Preload images and set initial background
+    images.forEach(url => { const img = new Image(); img.src = url; });
+    bgImage.src = images[0];
+    function changeBackground() {
+      const nextIndex = (currentImageIndex + 1) % images.length;
+      const nextImg = new Image();
+      nextImg.src = images[nextIndex];
+      nextImg.onload = function() {
+        bgImage.src = images[nextIndex];
+        currentImageIndex = nextIndex;
+      }
+    }
+    setInterval(changeBackground, 5000);
+    
+    /* Modal control for Dashboard Main Menu */
+    const mainMenuBtn = document.getElementById('mainMenuBtn');
+    const menuModal = document.getElementById('menuModal');
+    const closeModalBtn = document.getElementById('closeModal');
+    mainMenuBtn.addEventListener('click', () => { menuModal.style.display = 'flex'; });
+    closeModalBtn.addEventListener('click', () => { menuModal.style.display = 'none'; });
+    // Billing button: hide dashboard and show billing system
+    document.getElementById('billingButton').addEventListener('click', () => {
+      menuModal.style.display = 'none';
+      document.getElementById('dashboardSection').style.display = 'none';
+      document.getElementById('billingSystem').style.display = 'block';
+    });
+    // Back to Dashboard button in billing system
+    document.getElementById('backToDashboard').addEventListener('click', () => {
+      document.getElementById('billingSystem').style.display = 'none';
+      document.getElementById('dashboardSection').style.display = 'block';
+    });
+    
+    document.addEventListener("DOMContentLoaded", () => {
+      populateItems();
+      document.getElementById("currentDate").textContent = new Date().toLocaleDateString();
+    });
+  </script>
+</body>
+</html>
